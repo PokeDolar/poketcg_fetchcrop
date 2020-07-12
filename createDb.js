@@ -14,6 +14,7 @@ const TcgImageSchema = new Schema({
   name: { type: "String", required: true },
   artist: { type: "String", required: true },
   subtype: { type: "String", required: true },
+  ancientTrait: { type: Boolean, required: false}
 });
 
 let PokeTcg = mongoose.model("PokeTCG", TcgImageSchema);
@@ -111,12 +112,18 @@ async function downloadImage(url, filename) {
           if (!alreadyExits){
             let newPokemon = new PokeTcg(card);
             await newPokemon.save();
-            console.log(newPokemon);
           }
-          
+          else{
+            if (card.ancientTrait){
+              alreadyExits.ancientTrait = true;
+
+            console.log(alreadyExits);
+              alreadyExits.save();
+            }
+          }
         } catch (e) {
+          console.log(e);
           console.log("Could not save");
-          console.log(card);
         }
       }
     }

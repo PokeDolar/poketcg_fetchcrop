@@ -17,6 +17,7 @@ const TcgImageSchema = new Schema({
   filePath: { type: "String", required: true },
   setCode: { type: "String", required: true },
   cropped: { type: "Boolean" },
+  ancientTrait: { type: Boolean, required: false}
 });
 
 let PokeTcg = mongoose.model("PokeTCG", TcgImageSchema);
@@ -33,16 +34,18 @@ mongoose.connect("mongodb://localhost:27017/pokemontcgimages");
   //   });
   //   basicPokemons.push(basicPokemon);
   // }
-  let basicPokemons = await PokeTcg.find({ cropped: { $in: [null, false] } });
+  let basicPokemons = await PokeTcg.find();
 
   //console.log(basicPokemons[0])
   let total = basicPokemons.length;
   let error = 0;
   let errors = [];
   let counter = 0;
+  let crop=false;
+
   for (let index = 0; index < basicPokemons.length; index++) {
     let img = await sharp(`./${basicPokemons[index].filePath}.png`);
-
+    crop = false;
     let set = basicPokemons[index].setCode;
 
     params = {
@@ -99,25 +102,47 @@ mongoose.connect("mongodb://localhost:27017/pokemontcgimages");
       params.height = 522 - params.top + 1;
       params.width = 629 - params.left + 1;
     }
-
-    try {
-      let croppedImg = await img
-        .extract(params)
-        .toFile(`./croparts/${basicPokemons[index].filePath}.png`);
-      counter++;
-      basicPokemons[index].cropped = true;
-
-      console.log(`${counter}/${total}`);
-    } catch (e) {
-      error++;
-      basicPokemons[index].cropped = false;
-
-      console.log(e);
-      errors.push(basicPokemons[index]);
+    if (["sm6-2a.png", "smp-SM30a", "smp-SM61", "smp-SM92", "smp-SM103", "smp-SM103a", "smp-SM104",
+    "smp-SM104a", "smp-SM108", "smp-SM110", "smp-SM111", "smp-SM112", "smp-SM113",
+    "smp-SM114", "smp-SM129","smp-SM130","smp-SM132","smp-SM137",    "smp-SM138",
+    "smp-SM139",    "smp-SM140",    "smp-SM141",    "smp-SM142",    "smp-SM143",
+    "smp-SM145",    "smp-SM149",    "smp-SM150",    "smp-SM151",    "smp-SM152",
+    "smp-SM153",    "smp-SM154",    "smp-SM157",    "smp-SM158",    "smp-SM159",
+    "smp-SM160",    "smp-SM161",    "smp-SM162",    "smp-SM163", "smp-SM164",
+    "smp-SM165","smp-SM177",].includes(basicPokemons[index].id)){
+      crop = true;
+      
     }
-    basicPokemons[index].save();
-    console.log(errors);
-  }
+    if(basicPokemons[index].ancientTrait){
+      params.left = 15;
+      params.top = 155;
+      params.width = 700 - (params.left * 2) - 1;
+      params.height = 566 - params.top;
+      crop = true;
+      console.log(basicPokemons[index]);
+      console.log("hmm");
+    }
+    if(crop){
+      try {
+        let croppedImg = await img
+          .extract(params)
+          .toFile(`./croparts/${basicPokemons[index].filePath}.png`);
+        counter++;
+        basicPokemons[index].cropped = true;
+  
+        console.log(`${counter}/${total}`);
+      } catch (e) {
+        error++;
+        basicPokemons[index].cropped = false;
+  
+        console.log(e);
+        errors.push(basicPokemons[index]);
+      }
+      basicPokemons[index].save();
+      console.log(errors);
+    }
+    }
+    
 
   console.log("Acabou");
 })().catch((e) => console.log(e));
