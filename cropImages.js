@@ -17,7 +17,8 @@ const TcgImageSchema = new Schema({
   filePath: { type: "String", required: true },
   setCode: { type: "String", required: true },
   cropped: { type: "Boolean" },
-  ancientTrait: { type: Boolean, required: false}
+  ancientTrait: { type: Boolean, required: false},
+  ability: { type: Boolean, required: true}
 });
 
 let PokeTcg = mongoose.model("PokeTCG", TcgImageSchema);
@@ -44,7 +45,7 @@ mongoose.connect("mongodb://localhost:27017/pokemontcgimages");
   let crop=false;
 
   for (let index = 0; index < basicPokemons.length; index++) {
-    let img = await sharp(`./${basicPokemons[index].filePath}.png`);
+    let img = sharp(`./${basicPokemons[index].filePath}.png`);
     crop = false;
     let set = basicPokemons[index].setCode;
 
@@ -102,6 +103,15 @@ mongoose.connect("mongodb://localhost:27017/pokemontcgimages");
       params.height = 522 - params.top + 1;
       params.width = 629 - params.left + 1;
     }
+    if(["det1"].includes(set)){
+      params.left = 58
+      params.top = 101
+      params.width = 484 - params.top + 1
+      params.width = 675 - params.left + 1
+    }
+    if(["xyp"].includes(set)){
+      crop = true;
+    }
     if (["sm6-2a.png", "smp-SM30a", "smp-SM61", "smp-SM92", "smp-SM103", "smp-SM103a", "smp-SM104",
     "smp-SM104a", "smp-SM108", "smp-SM110", "smp-SM111", "smp-SM112", "smp-SM113",
     "smp-SM114", "smp-SM129","smp-SM130","smp-SM132","smp-SM137",    "smp-SM138",
@@ -110,17 +120,32 @@ mongoose.connect("mongodb://localhost:27017/pokemontcgimages");
     "smp-SM153",    "smp-SM154",    "smp-SM157",    "smp-SM158",    "smp-SM159",
     "smp-SM160",    "smp-SM161",    "smp-SM162",    "smp-SM163", "smp-SM164",
     "smp-SM165","smp-SM177",].includes(basicPokemons[index].id)){
-      crop = true;
-      
+      crop = false;
+      params.left = 61
+      params.top = 100
+      params.width = 474 - params.top + 1
+      params.width = 675 - params.left + 1
     }
-    if(basicPokemons[index].ancientTrait){
+     if(['xyp-XY49', 'xyp-XY57', 'xyp-XY58', 'xyp-XY59', 'xyp-XY92', 'xyp-XY93'].includes(basicPokemons[index].id)){
+       params.left = 15;
+       params.top = 155;
+       params.width = 700 - (params.left * 2) - 1;
+       params.height = 566 - params.top;
+       crop = true;
+       console.log(basicPokemons[index].id);
+    
+    }
+    if (['xyp-XY67a', 'xyp-XY74', 'xyp-XY75', 'xyp-XY76', 'xyp-XY77', 'xyp-XY78',
+    'xyp-XY79', 'xyp-XY80', 'xyp-XY81', 'xyp-XY82', 'xyp-XY83', 'xyp-XY110',
+    'xyp-XY111', 'xyp-XY112', 'xyp-XY113', 'xyp-XY114', 'xyp-XY112', 'xyp-XY115',
+    'xyp-XY116', 'xyp-XY117', 'xyp-XY118', 'xyp-XY119', 'xyp-XY120', 'xyp-XY185',
+    'xyp-XY186'].includes(basicPokemons[index].id)){
       params.left = 15;
-      params.top = 155;
+      params.top = 95;
       params.width = 700 - (params.left * 2) - 1;
-      params.height = 566 - params.top;
+      params.height = 546 - params.top;
       crop = true;
-      console.log(basicPokemons[index]);
-      console.log("hmm");
+      console.log(basicPokemons[index].id);
     }
     if(crop){
       try {
@@ -129,8 +154,8 @@ mongoose.connect("mongodb://localhost:27017/pokemontcgimages");
           .toFile(`./croparts/${basicPokemons[index].filePath}.png`);
         counter++;
         basicPokemons[index].cropped = true;
-  
         console.log(`${counter}/${total}`);
+        basicPokemons[index].save();
       } catch (e) {
         error++;
         basicPokemons[index].cropped = false;
@@ -138,11 +163,10 @@ mongoose.connect("mongodb://localhost:27017/pokemontcgimages");
         console.log(e);
         errors.push(basicPokemons[index]);
       }
-      basicPokemons[index].save();
-      console.log(errors);
-    }
+      }
     }
     
 
   console.log("Acabou");
+  console.log(errors);
 })().catch((e) => console.log(e));

@@ -46,13 +46,15 @@ async function downloadImage(url, filename) {
 (async () => {
   let basicPokemons = await PokeTcg.find();
   //console.log(basicPokemons[0])
+  let counter = 0
   for (let index = 0; index < basicPokemons.length; index++){
   
-    if(basicPokemons[index].filePath == undefined){
+    if(!basicPokemons[index].filePath){
       try{
         await downloadImage(basicPokemons[index].imageUrlHiRes, basicPokemons[index].id);
         basicPokemons[index].filePath = `arts/${basicPokemons[index].id}`
         basicPokemons[index].save()
+        console.log(`Baixou ${++counter}` );
       }
       catch(e){
 

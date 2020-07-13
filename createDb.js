@@ -8,13 +8,39 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const TcgImageSchema = new Schema({
-  imageUrlHiRes: { type: "String", required: true },
-  number: { type: "String", required: true },
-  id: { type: "String", required: true },
-  name: { type: "String", required: true },
-  artist: { type: "String", required: true },
-  subtype: { type: "String", required: true },
-  ancientTrait: { type: Boolean, required: false}
+  imageUrlHiRes: {
+    type: "String",
+    required: true
+  },
+  number: {
+    type: "String",
+    required: true
+  },
+  id: {
+    type: "String",
+    required: true
+  },
+  setCode: {
+    type: "String",
+    required: true
+  },
+  name: {
+    type: "String",
+    required: true
+  },
+  artist: {
+    type: "String",
+    required: true
+  },
+  subtype: {
+    type: "String",
+    required: true
+  },
+  nationalPokedexNumber: { type: "String", required: true },
+  ancientTrait: {
+    type: Boolean,
+    required: false
+  },
 });
 
 let PokeTcg = mongoose.model("PokeTCG", TcgImageSchema);
@@ -104,28 +130,45 @@ async function downloadImage(url, filename) {
       //await downloadImage(`${card.name}-${card.cardid}-${card.artist}`);
       //console.log(`downloaded ${card.cardid}`);
       if (
-        validTypes.includes(card.subtype) && validSets.includes(card.setCode)
+        validTypes.includes(card.subtype) &&
+        validSets.includes(card.setCode)
       ) {
         try {
-          let alreadyExits = await PokeTcg.findOne({id: card.id})
+          let alreadyExits = await PokeTcg.findOne({
+            id: card.id
+          });
+          if (!alreadyExits) {
+            if (card.ancientTrait) {
+              card.ancientTrait = true;
+            }
+            if (card.setCode == "det1") {
+              card.artist = "MPC Film";
+            }
+            if (card.artist) {
+              newPokemon = new PokeTcg(card);
+              await newPokemon.save();
+            }
 
-          if (!alreadyExits){
-            let newPokemon = new PokeTcg(card);
-            await newPokemon.save();
-          }
-          else{
-            if (card.ancientTrait){
+          } else {
+            if (card.ancientTrait) {
               alreadyExits.ancientTrait = true;
-
-            console.log(alreadyExits);
+            }
+            if (card.setCode == "det1") {
+              alreadyExits.artist = "MPC Film";
+              alreadyExits.setCode = "det1";
+            }
+            alreadyExits.artist = card.artist;
+            if (card.artist) {
               alreadyExits.save();
             }
           }
+          console.log("ADDCARD")
         } catch (e) {
-          console.log(e);
+          console.log(card);
           console.log("Could not save");
         }
       }
     }
   }
+  console.log("acabou");
 })().catch((e) => console.log(e));

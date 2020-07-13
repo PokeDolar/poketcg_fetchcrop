@@ -14,7 +14,8 @@ const TcgImageSchema = new Schema({
   name: { type: "String", required: true },
   artist: { type: "String", required: true },
   subtype: { type: "String", required: true },
-  setCode: { type: 'String', required: true}
+  setCode: { type: 'String', required: true},
+  ability: { type: Boolean, required: true}
 });
 
 let PokeTcg = mongoose.model("PokeTCG", TcgImageSchema);
@@ -36,8 +37,9 @@ mongoose.connect("mongodb://localhost:27017/pokemontcgimages");
       try{
         let cardObj = await PokeTcg.findOne({id: card.id})
         if (cardObj){
-          cardObj.nationalPokedexNumber = card.nationalPokedexNumber;
-          cardObj.setCode = card.setCode;
+          // cardObj.nationalPokedexNumber = card.nationalPokedexNumber;
+          // cardObj.setCode = card.setCode;
+          cardObj.ability = card.ability ? true : false;
           cardObj.save()
           console.log(++counter);
         }
